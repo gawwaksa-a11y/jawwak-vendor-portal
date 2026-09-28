@@ -2,26 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 40 33% 99%;
+    --foreground: 30 15% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 30 15% 15%;
+    --primary: 37 45% 61%; /* ذهبي رملي #C9A96E */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 202 53% 58%; /* أزرق سماوي #5BA4CF */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 40 20% 94%;
+    --muted-foreground: 30 8% 45%;
+    --accent: 40 30% 92%;
+    --accent-foreground: 30 15% 20%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 36 20% 88%;
+    --input: 36 20% 88%;
+    --ring: 37 45% 61%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 30 12% 10%;
+    --foreground: 40 20% 92%;
+    --card: 30 12% 13%;
+    --card-foreground: 40 20% 92%;
+    --primary: 37 45% 61%;
+    --primary-foreground: 30 20% 12%;
+    --secondary: 202 53% 58%;
+    --secondary-foreground: 30 20% 12%;
+    --muted: 30 10% 18%;
+    --muted-foreground: 40 10% 65%;
+    --accent: 30 10% 20%;
+    --accent-foreground: 40 20% 92%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 10% 22%;
+    --input: 30 10% 22%;
+    --ring: 37 45% 61%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
