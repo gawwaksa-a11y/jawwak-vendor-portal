@@ -1,16 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import {
+  signInWithPhoneNumber,
+  RecaptchaVerifier,
+  ConfirmationResult,
+} from 'firebase/auth';
 
+import { auth } from '@/lib/firebase';
 import { apiClient } from '@/lib/api-client';
 import { clearSession, setActiveVendor, setSession } from '@/lib/auth';
-import type { AuthUser, Vendor } from '@/types';
-
-const MOCK_OTP = '1234';
+import type { Vendor } from '@/types';
 
 interface VerifyResponse {
-  user: AuthUser;
+  user: { id: string; phone: string };
   token?: string;
   accessToken?: string;
 }
@@ -19,26 +23,56 @@ export function useAuth() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const confirmationRef = useRef<ConfirmationResult | null>(null);
 
-  /// إرسال رمز التحقق (محاكاة — للتجربة استخدم 1234).
-  async function requestOtp(): Promise<void> {
+  /// إرسال رمز التحقق عبر Firebase Phone Auth.
+  async function requestOtp(phone: string): Promise<void> {
     setError(null);
-    await new Promise((r) => setTimeout(r, 500));
+    setLoading(true);
+    try {
+      // تأكّد من وجود عنصر الـ recaptcha في الصفحة، وأنشئه إن لم يكن موجوداً.
+      let recaptchaContainer = document.getElementById('recaptcha-container');
+      if (!recaptchaContainer) {
+        recaptchaContainer = document.createElement('div');
+        recaptchaContainer.id = 'recaptcha-container';
+        document.body.appendChild(recaptchaContainer);
+      }
+
+      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+      });
+
+      // حوّل الرقم السعودي إلى صيغة E.164 (05xxxxxxxx → +9665xxxxxxxx).
+      const e164Phone = phone.startsWith('+')
+        ? phone
+        : `+966${phone.replace(/^0/, '')}`;
+
+      const confirmation = await signInWithPhoneNumber(auth, e164Phone, verifier);
+      confirmationRef.current = confirmation;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'تعذّر إرسال رمز التحقق');
+      throw e;
+    } finally {
+      setLoading(false);
+    }
   }
 
-  /// التحقق من الرمز وتبادل التوكن مع الخادم، ثم ربط أول متجر كـ "متجري".
+  /// التحقق من الرمز عبر Firebase، ثم إرسال idToken للخادم.
   async function verifyOtp(phone: string, code: string): Promise<boolean> {
     setError(null);
-    if (code !== MOCK_OTP) {
-      setError('رمز التحقق غير صحيح');
+    if (!confirmationRef.current) {
+      setError('يرجى إرسال رمز التحقق أولاً');
       return false;
     }
     setLoading(true);
     try {
+      const userCredential = await confirmationRef.current.confirm(code);
+      const idToken = await userCredential.user.getIdToken();
+
       const res = await apiClient.post<VerifyResponse>('/auth/verify-token', {
-        idToken: 'dev-firebase-id-token',
+        idToken,
       });
-      const token = res.token ?? res.accessToken ?? 'dev';
+      const token = res.token ?? res.accessToken ?? '';
       setSession(token);
 
       // نربط متجر المزوّد الحالي عبر نقطة /vendors/mine.

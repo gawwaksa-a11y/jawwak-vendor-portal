@@ -27,10 +27,14 @@ export default function LoginPage() {
       toast.error('أدخل رقم جوال سعودي صحيح (05xxxxxxxx)');
       return;
     }
-    await requestOtp();
-    setSent(true);
-    setSeconds(60);
-    toast.success('أرسلنا رمز التحقق (للتجربة: 1234)');
+    try {
+      await requestOtp(phone);
+      setSent(true);
+      setSeconds(60);
+      toast.success('أرسلنا رمز التحقق على جوالك');
+    } catch {
+      // الخطأ يُعرض من خلال error في useAuth
+    }
   }
 
   async function handleVerify() {
@@ -40,6 +44,8 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sand-light/30 to-background p-4">
+      {/* حاوية غير مرئية مطلوبة لـ Firebase RecaptchaVerifier */}
+      <div id="recaptcha-container" />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 text-4xl">🧭</div>
