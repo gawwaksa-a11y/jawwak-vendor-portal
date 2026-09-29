@@ -19,6 +19,8 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
+import { apiClient } from '@/lib/api-client';
+import { getVendorId } from '@/lib/auth';
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -27,6 +29,22 @@ export default function SettingsPage() {
   const [iban, setIban] = useState('');
   const [notif, setNotif] = useState(true);
   const [confirmText, setConfirmText] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function saveAccount() {
+    setSaving(true);
+    try {
+      const vendorId = getVendorId();
+      if (vendorId) {
+        await apiClient.patch(`/vendors/${vendorId}`, { phone, iban });
+      }
+      toast.success('تم حفظ بيانات الحساب');
+    } catch {
+      toast.error('تعذّر حفظ البيانات');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -45,8 +63,8 @@ export default function SettingsPage() {
             <Label>الآيبان (IBAN) للتسويات</Label>
             <Input value={iban} onChange={(e) => setIban(e.target.value)} dir="ltr" placeholder="SA00 0000 0000 0000 0000 0000" />
           </div>
-          <Button onClick={() => toast.success('تم حفظ بيانات الحساب')}>
-            حفظ
+          <Button onClick={saveAccount} disabled={saving}>
+            {saving ? 'جارٍ الحفظ...' : 'حفظ'}
           </Button>
         </CardContent>
       </Card>

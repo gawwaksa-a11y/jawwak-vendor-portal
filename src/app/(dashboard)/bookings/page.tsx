@@ -37,14 +37,21 @@ export default function BookingsPage() {
   const verifyQr = useVerifyQr();
 
   async function handleScan(text: string) {
-    // نستخرج معرّف الحجز من الحمولة إن أمكن، وإلا نستخدم النص كما هو.
+    let bookingId = '';
+    let qrCode = text;
     try {
-      await verifyQr.mutateAsync({ bookingId: 'scanned', qrCode: text });
-      toast.success('تم التحقّق من الحجز — الحالة الآن: مُستخدم ✅');
-      refetch();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'رمز QR غير صالح أو منتهٍ');
+      const parsed = JSON.parse(text);
+      bookingId = parsed.bookingId ?? parsed.id ?? '';
+      qrCode = parsed.code ?? parsed.qrCode ?? text;
+    } catch {
+      // plain text — try to use it directly
+      bookingId = text;
     }
+    if (!bookingId) {
+      toast.error('رمز QR غير صالح');
+      return;
+    }
+    await verifyQr.mutateAsync({ bookingId, qrCode });
   }
 
   return (

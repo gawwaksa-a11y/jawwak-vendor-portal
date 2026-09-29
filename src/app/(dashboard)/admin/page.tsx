@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CalendarCheck,
   Percent,
@@ -48,6 +50,17 @@ function pct(value: number, target: number) {
 }
 
 export default function AdminKpisPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const isAdmin =
+      typeof window !== 'undefined' &&
+      localStorage.getItem('jawwak_is_admin') === 'true';
+    if (!isAdmin) {
+      router.replace('/dashboard');
+    }
+  }, [router]);
+
   const { data, isLoading } = useKpis();
   const ts = useKpisTimeseries(14);
   const series = (ts.data ?? []).map((p) => ({

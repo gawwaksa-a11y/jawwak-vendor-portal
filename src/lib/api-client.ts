@@ -35,6 +35,16 @@ async function request<T>(
     body = null;
   }
 
+  if (res.status === 401) {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('jawwak_token');
+      localStorage.removeItem('jawwak_vendor_id');
+      document.cookie = 'jawwak_token=; Max-Age=0; path=/';
+      document.cookie = 'jawwak_vendor_id=; Max-Age=0; path=/';
+      window.location.href = '/login';
+    }
+  }
+
   if (!res.ok || (body && body.success === false)) {
     const msg = body?.message;
     const text = Array.isArray(msg) ? msg[0] : msg;

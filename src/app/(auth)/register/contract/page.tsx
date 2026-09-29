@@ -8,23 +8,33 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Stepper } from '@/components/register/stepper';
 import { ContractViewer } from '@/components/register/contract-viewer';
+import { apiClient } from '@/lib/api-client';
+import { getVendorId } from '@/lib/auth';
 
 export default function RegisterContract() {
   const router = useRouter();
   const [agreed, setAgreed] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [signing, setSigning] = useState(false);
 
   async function sign() {
     if (!agreed) {
       toast.error('يجب الموافقة على العقد للمتابعة');
       return;
     }
-    setLoading(true);
-    // ملاحظة: تسجيل contractSignedAt يتطلب توسيع UpdateVendorDto في الـ Backend.
-    await new Promise((r) => setTimeout(r, 600));
-    setLoading(false);
-    toast.success('تم توقيع العقد بنجاح — أهلاً بك في جوّك! 🎉');
-    router.push('/dashboard');
+    setSigning(true);
+    try {
+      const vendorId = getVendorId();
+      if (vendorId) {
+        await apiClient.patch(`/vendors/${vendorId}`, {
+          contractSignedAt: new Date().toISOString(),
+        });
+      }
+      router.push('/dashboard');
+    } catch (e) {
+      toast.error('تعذّر تسجيل التوقيع');
+    } finally {
+      setSigning(false);
+    }
   }
 
   return (
@@ -45,8 +55,8 @@ export default function RegisterContract() {
             />
             قرأت ووافقت على شروط الاتفاقية ونسبة العمولة 15%.
           </label>
-          <Button className="w-full" size="lg" onClick={sign} disabled={loading}>
-            {loading ? 'جارٍ التوقيع...' : 'وقّع وابدأ'}
+          <Button className="w-full" size="lg" onClick={sign} disabled={signing}>
+            {signing ? 'جارٍ التوقيع...' : 'وقّع وابدأ'}
           </Button>
         </CardContent>
       </Card>
