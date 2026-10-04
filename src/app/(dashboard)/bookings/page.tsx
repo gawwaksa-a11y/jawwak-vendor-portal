@@ -29,7 +29,7 @@ export default function BookingsPage() {
   const [selected, setSelected] = useState<BookingRow | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
 
-  const { items, total, totalPages, isLoading, refetch } = useBookings({
+  const { items, total, totalPages, isLoading } = useBookings({
     status,
     search,
     page,
