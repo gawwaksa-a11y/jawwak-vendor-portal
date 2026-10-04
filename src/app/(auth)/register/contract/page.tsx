@@ -30,7 +30,7 @@ export default function RegisterContract() {
         });
       }
       router.push('/dashboard');
-    } catch (e) {
+    } catch  {
       toast.error('تعذّر تسجيل التوقيع');
     } finally {
       setSigning(false);
